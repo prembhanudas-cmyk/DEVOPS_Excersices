@@ -1,0 +1,145 @@
+DevOps Lab Program 2 — Develop a multistage Docker for Container Orchestration
+1. Create project folder
+mkdir ~/Program_02
+cd ~/Program_02
+---
+2. Create `src/index.js`
+mkdir src
+nano src/index.js
+Paste:
+
+const express = require('express');
+
+const app = express();
+const PORT = 3000;
+
+app.get('/', (req, res) => {
+    res.send('Hello from multi-stage Docker!');
+});
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
+
+Save: **Ctrl+O → Enter → Ctrl+X**
+
+---
+3. Create `package.json`
+nano package.json
+Paste:
+{
+  "name": "program-2",
+  "version": "1.0.0",
+  "description": "A Node.js app with multi-stage Dockerfile",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "mkdir -p dist && cp -r src/* dist/"
+  },
+  "author": "Deepika K",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
+
+Save and exit.
+
+---
+4. Install dependencies
+
+In main Directory : Program_02
+sudo apt update
+sudo apt install -y nodejs npm
+node --version
+npm --version
+
+npm install
+
+This creates:
+node_modules/
+package-lock.json
+
+---
+5. Create `Dockerfile`
+nano Dockerfile
+
+Paste:
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/package-lock.json ./
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+
+EXPOSE 3000
+
+CMD ["node", "dist/index.js"]
+
+Save and exit.
+
+This is the **multi-stage Dockerfile** from your Program–2 manual: the first stage builds the application and the second stage runs the production application. prog2
+
+---
+6. Build Docker image
+sudo docker build -t program-2 .
+---
+7. Run Docker container
+sudo docker run -d -p 3000:3000 --name program2-container program-2
+---
+8. Check container
+sudo docker ps
+You should see:
+program2-container
+and:
+3000->3000
+
+---
+9. Open browser 🌐
+
+Go to:
+http://localhost:3000
+Expected output:
+Hello from multi-stage Docker!
+
+This is the application response defined in your `index.js`. prog2
+---
+10. Cleanup
+
+After taking your output screenshot:
+sudo docker stop program2-container
+sudo docker rm program2-container
+sudo docker rmi program-2
+`
+### 🎯 Final flow
+index.js + package.json
+        ↓
+   npm install
+        ↓
+   Dockerfile
+        ↓
+ docker build
+        ↓
+ Docker Image
+        ↓
+ docker run
+        ↓
+ Container
+        ↓
+localhost:3000
+        ↓
+Hello from multi-stage Docker!
+This follows the execution sequence in your Program–2 manual: install dependencies → build the Docker image → run the application. prog2
