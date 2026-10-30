@@ -1,0 +1,551 @@
+Prem, let's perform Program 5: Demonstrate CI Integration by Running Jenkins in a Docker Container from absolute scratch. I'll explain every command, where to execute it, which files to create, and how to verify the output.
+
+We'll do it practically, just like you're performing it in your DevOps lab. 🚀
+
+### Program 5 – Run Jenkins Inside a Docker Container
+
+![jamon.ca](https://images.openai.com/static-rsc-4/DZnrXfwoAcXddV0n6445LwWTvMyvsEzbd1HeToATRzHuckjVVt3jh1xyxS4Sj2tJfXQU1dKBN1mgoZ3GeWfawGUWXrrPaB29eEXAm0MwzckheJSYeyRc0eVLgySXyr0YaMEZzTRsISzQhe_hLLytmngKgl_wswubcSXAeiBxt1lk3IHJapp7-5jF6tZthunU?purpose=fullsize)
+
+### 1\. Understand what we are building
+
+First, understand the concept.
+
+* Docker: Runs applications inside containers.
+
+* Jenkins: Automates software building, testing and deployment.
+
+* CI (Continuous Integration): Automatically builds and tests code whenever developers make changes.
+
+Our objective is to run Jenkins inside a Docker container.
+
+Architecture of our project
+
+Your Computer
+
+Host machine – Docker installed
+
+Docker Container
+
+### Jenkins
+
+Runs on port 8080
+
+Docker CLI
+
+Communicates with the host Docker Engine through docker.sock
+
+Browser \*\*http://localhost:8080\*\*
+
+### 2\. Software requirements
+
+You need:
+
+* Docker Desktop (Windows) or Docker Engine (Linux).
+
+* Docker Compose.
+
+* VS Code (recommended).
+
+* Chrome or any web browser.
+
+Check whether Docker is installed.
+
+Open your terminal (Ubuntu terminal, VS Code terminal, or PowerShell).
+
+Execute:
+
+```bash
+docker --version
+```
+
+Then:
+
+```bash
+docker compose version
+```
+
+If both commands display version numbers, you're ready.
+
+Check Docker is running:
+
+```bash
+docker info
+```
+
+If you get a connection error, start Docker Desktop or the Docker service before proceeding.
+
+### 3\. Create the project folder
+
+We need to create a folder named `program-5`.
+
+Execute these commands one by one:
+
+```bash
+mkdir program-5
+```
+
+This creates a new folder.
+
+```bash
+cd program-5
+```
+
+This enters the folder.
+
+Now open the folder in VS Code:
+
+```bash
+code .
+```
+
+Your project structure will look like this:
+
+```text
+program-5/
+│
+├── Dockerfile
+│
+└── docker-compose.yml
+```
+
+We need to create two files.
+
+### 4\. Create Dockerfile
+
+Inside VS Code:
+
+* Right-click the project folder.
+
+* Select New File.
+
+* Name it `Dockerfile`.
+
+* Copy the following code.
+
+Dockerfile
+
+```dockerfile
+
+FROM jenkins/jenkins:lts
+
+# Switch to root user
+USER root
+
+# Install Docker CLI
+RUN apt-get update && \
+    apt-get install -y docker.io && \
+    rm -rf /var/lib/apt/lists/*
+
+# Switch back to Jenkins user
+USER jenkins
+```
+
+### Understand each line
+
+| Command                   | Purpose                                             |
+| ------------------------- | --------------------------------------------------- |
+| FROM                      | Downloads the Jenkins base image                    |
+| USER root                 | Gives administrator privileges inside the container |
+| RUN apt-get update        | Updates package information                         |
+| apt-get install docker.io | Installs Docker tools                               |
+| USER jenkins              | Switches back to Jenkins user                       |
+
+Important: Installing Docker tools does not start another Docker daemon. We will connect Jenkins to the host Docker Engine using the Docker socket in the Compose file.
+
+### 5\. Create docker-compose.yml
+
+Now create another file:
+
+`docker-compose.yml`
+
+Copy this code:
+
+```yaml
+
+services:
+  jenkins:
+    build: .
+    image: program5-jenkins:latest
+    container_name: jenkins-ci
+
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:
+```
+
+### Understand docker-compose.yml
+
+| Configuration  | Explanation                                  |
+| -------------- | -------------------------------------------- |
+| services       | Defines the services                         |
+| jenkins        | Name of our service                          |
+| build: .       | Builds using the current folder's Dockerfile |
+| image          | Names our Docker image                       |
+| container_name | Names the container                          |
+| 8080:8080      | Maps Jenkins web port                        |
+| 50000:50000    | Maps Jenkins agent port                      |
+| jenkins_home   | Stores Jenkins data                          |
+| docker.sock    | Connects Jenkins to host Docker              |
+
+Important security note: Mounting `docker.sock` gives Jenkins substantial control over the host Docker Engine. Use this setup only in a trusted lab environment.
+
+### 6\. Build and run Jenkins
+
+Now comes the most important practical step.
+
+Open the terminal inside the `program-5` folder.
+
+Execute:
+
+```bash
+docker compose up -d --build
+```
+
+What does this command do?
+
+* `docker compose`: Runs Docker Compose.
+
+* `up`: Creates and starts containers.
+
+* `-d`: Runs containers in the background.
+
+* `--build`: Builds the Docker image before starting.
+
+Expected result
+
+Docker will:
+
+* Download the Jenkins base image.
+
+* Install Docker tools.
+
+* Build your custom Jenkins image.
+
+* Create the Jenkins container.
+
+* Start Jenkins.
+
+![Deploying Jenkins CI/CD to Docker | by Michael Rodgers | Medium](https://images.openai.com/static-rsc-4/k1Cc-IPvUJa49H0giRoKGBOODGvSw37-Ux3xeH0A0s5TuxaG3xDF-H_MF9qMkpIU6f4sO_RiF8VSEFZIlBhw-ft0Z9nE539VHi2oz-FSbntKLrotxC5oI5ZMoVOc0hED1LjyboR5kkKtx5hQqFBE10hE2nEdA_dMaD5wwfWWB2AU7wP64XH54xCVoxrnyGyw?purpose=fullsize)
+
+### Check whether Jenkins is running
+
+Execute:
+
+```bash
+docker ps
+```
+
+You should see a container named:
+
+```text
+jenkins-ci
+```
+
+Check its logs:
+
+```bash
+docker logs jenkins-ci
+```
+
+To follow logs continuously:
+
+```bash
+docker logs -f jenkins-ci
+```
+
+Press `Ctrl + C` to stop following the logs. This does not stop Jenkins.
+
+### 7\. Access Jenkins in your browser
+
+Open Chrome.
+
+Enter:
+
+Jenkins URL
+
+### [http://localhost:8080](http://localhost:8080?utm_source=chatgpt.com)
+
+Open Jenkins
+
+You should see the Jenkins unlock screen.
+
+![Steps to Install Jenkins on Different Operating Systems (Windows, Ubuntu, Mac)](https://images.openai.com/static-rsc-4/dlaRS9qgUsoa3b7FqWUy-vpPHLkfnoMjqlqyEIv1LS7vTLBPxR3LQcb3pki7hZfsGbOAYHQNK-O8RKeQloDaOn3q8BpbJtvfKa5I1YZhqMotvu5txewImjsd6m9vqzjCilyfpnwPQ-CIy1u5CrVLy56M2VZ5NLMqWi1g4GW7LxzuDpsWhkGDKORUcxCmuF4L?purpose=fullsize)
+
+### Get the initial administrator password
+
+Return to your terminal.
+
+Execute:
+
+```bash
+docker exec jenkins-ci cat /var/jenkins_home/secrets/initialAdminPassword
+```
+
+It will display a password.
+
+* Copy the password.
+
+* Paste it into the Jenkins browser page.
+
+* Click Continue.
+
+Next:
+
+* Select Install suggested plugins.
+
+* Wait until installation completes.
+
+* Create your administrator username and password.
+
+* Click Save and Continue.
+
+* Click Start using Jenkins.
+
+![Configurando o Jenkins - Projeto de Devops e CI/CD - Realizando o deploy de aplicações web](https://images.openai.com/static-rsc-4/_w0NCHhWkCPXKB8GMr7bPKieRpjKcfM27GL1wOSn6WOV0oQw2H9-tsCGzLBe8IPHpXUEAntLzed3DwuS5ycvX8JnYETBbmlLRv7i5PE3SvpMc3Bq9mJPa950Se-KMRiffkHsoyTEfacdvIYN3tGwQUScCOtY1yxuUlt9EDnVwD1Y9I-whCiigUnfJjQI9SyA?purpose=fullsize)
+
+Congratulations! Jenkins is now running inside your Docker container.
+
+### 8\. Test Continuous Integration using Jenkins
+
+Your lab manual mentions configuring Jenkins pipelines and validating triggered builds.
+
+Simply running Jenkins does not automatically configure CI. Let's test it using a Pipeline job.
+
+### Step 1: Create a new job
+
+* Open Jenkins dashboard.
+
+* Click New Item.
+
+* Enter project name:
+
+```text
+My-CI-Pipeline
+```
+
+* Select Pipeline.
+
+* Click OK.
+
+### Step 2: Add pipeline code
+
+Scroll down to the Pipeline section.
+
+Select:
+
+`Definition → Pipeline script`
+
+Paste this code:
+
+```groovy
+
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Build') {
+            steps {
+                echo 'Building the application...'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Testing the application...'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying the application...'
+            }
+        }
+    }
+}
+```
+
+Click Save.
+
+### Step 3: Execute the pipeline
+
+* Open `My-CI-Pipeline`.
+
+* Click Build Now.
+
+* Wait for execution.
+
+* Click the build number.
+
+* Select Console Output.
+
+![Jenkins Pipeline: Streamlining Your CI/CD Workflow](https://images.openai.com/static-rsc-4/Peue_pCIDQs7L7gAGRMX0yOTTCdVUCW9giifPR2dDRzcXcb9rGfzwPhsjvdS6R5Qo8GKt-L4i_yF4HolexgEk_LGcVldtvqNv8H5O0zwkCCstwWwGcSBY_74PRJI8X6fslN2-nX9WBhsjIVV_sh3iFzTPe78X1061jfd3KGLqg3FHtDiHbotxv-4qzY3m7Tk?purpose=fullsize)
+
+Expected output:
+
+```text
+Building the application...
+
+Testing the application...
+
+Deploying the application...
+
+Finished: SUCCESS
+```
+
+CI pipeline test successful
+
+This demonstrates the Build, Test and Deploy stages. For actual automatic integration, you can later connect a GitHub repository and configure a webhook.
+
+### 9\. List and delete Docker images (Step 7 in your manual)
+
+First, list all Docker images:
+
+```bash
+docker images
+```
+
+You should find:
+
+```text
+program5-jenkins    latest
+```
+
+Delete the image:
+
+```bash
+docker image rm program5-jenkins:latest
+```
+
+Important: If the container is still using this image, Docker will not allow you to remove it. First stop and remove the container:
+
+```bash
+docker compose down
+```
+
+Then:
+
+```bash
+docker image rm program5-jenkins:latest
+```
+
+This completes the cleanup.
+
+Note: `docker compose down` preserves the named `jenkins_home` volume by default, so your Jenkins data remains available.
+
+### 10\. All commands at one place (Practical record)
+
+Here is the complete command sequence for your lab practical.
+
+```bash
+
+# Step 1: Check Docker
+docker --version
+docker compose version
+docker info
+
+# Step 2: Create project
+mkdir program-5
+cd program-5
+
+# Step 3: Open VS Code
+code .
+
+# Step 4: Create Dockerfile
+# Add the Dockerfile code provided above
+
+# Step 5: Create docker-compose.yml
+# Add the Compose code provided above
+
+# Step 6: Build and run Jenkins
+docker compose up -d --build
+
+# Step 7: Check running container
+docker ps
+
+# Step 8: Check logs
+docker logs jenkins-ci
+
+# Step 9: Get Jenkins password
+docker exec jenkins-ci cat /var/jenkins_home/secrets/initialAdminPassword
+
+# Step 10: Access Jenkins
+# http://localhost:8080
+
+# Step 11: List Docker images
+docker images
+
+# Step 12: Stop and remove container
+docker compose down
+
+# Step 13: Remove Docker image
+docker image rm program5-jenkins:latest
+```
+
+### 11\. Viva questions and answers
+
+| Question                    | Answer                                                  |
+| --------------------------- | ------------------------------------------------------- |
+| What is Jenkins?            | An open-source automation server.                       |
+| What is Docker?             | A platform for containerizing applications.             |
+| What is CI?                 | Continuous Integration.                                 |
+| What is a Dockerfile?       | A file containing instructions to build a Docker image. |
+| What is Docker Compose?     | A tool for managing multi-container applications.       |
+| What is a Docker image?     | A template used to create containers.                   |
+| What is a Docker container? | A running instance of an image.                         |
+| What is port 8080?          | Jenkins web interface port.                             |
+| What is docker.sock?        | Unix socket used to communicate with Docker Engine.     |
+| What is a Jenkins pipeline? | A sequence of automated software delivery stages.       |
+
+### 12\. Understand the final result
+
+What you have successfully demonstrated
+
+* Create a custom Jenkins Docker image.
+
+* Run Jenkins inside a Docker container.
+
+* Access Jenkins through a web browser.
+
+* Create a Jenkins Pipeline.
+
+* Execute Build, Test and Deploy stages.
+
+* List and delete Docker images.
+
+One important practical point: Your lab manual's Dockerfile installs `docker.io`, but that alone does not guarantee Jenkins can execute Docker commands. The socket permissions may need configuration, particularly on Linux. If you want to test Docker commands from Jenkins itself, we should configure the socket's group permissions as well.
+
+### Let's perform it practically!
+
+Before we start, tell me where you are executing this program:
+
+1\. Which operating system are you using?
+
+Windows 10/11
+
+Ubuntu Linux
+
+GitHub Codespaces
+
+Other
+
+2\. Where will you execute the commands?
+
+VS Code Terminal
+
+System Terminal / PowerShell
+
+Docker Desktop
+
+Start practical execution
+
+I'll guide you command by command, including fixing errors if anything goes wrong. 💻
