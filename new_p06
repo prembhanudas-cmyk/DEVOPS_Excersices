@@ -1,0 +1,644 @@
+# PROGRAM 6: DEPLOY DOCKER IMAGE TO DOCKER HUB AND GITHUB CONTAINER REGISTRY
+
+## 1. AIM
+
+To build a Docker image, tag it, push it to Docker Hub and GitHub Container Registry (GHCR), and upload the project source code to GitHub.
+
+## 2. REQUIREMENTS
+
+1. Ubuntu Linux
+2. Docker Engine
+3. Git
+4. Node.js
+5. npm
+6. Docker Hub account
+7. GitHub account
+8. GitHub Personal Access Token (PAT)
+
+---
+
+## STEP 1: CHECK SOFTWARE
+
+Open Ubuntu Terminal.
+
+Check Docker:
+
+```bash
+docker --version
+```
+
+Check Git:
+
+```bash
+git --version
+```
+
+Check Node.js:
+
+```bash
+node --version
+```
+
+Check npm:
+
+```bash
+npm --version
+```
+
+---
+
+## STEP 2: CREATE PROJECT DIRECTORY
+
+```bash
+mkdir P06
+cd P06
+```
+
+Open VS Code:
+
+```bash
+code .
+```
+
+---
+
+## STEP 3: CREATE PROJECT FILES
+
+Create the following files inside VS Code:
+
+```text
+P06/
+│
+├── Dockerfile
+├── package.json
+├── server.js
+└── .gitignore
+```
+
+### A. Dockerfile
+
+Create a file named `Dockerfile`.
+
+Paste:
+
+```dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+```
+
+### B. package.json
+
+Create a file named `package.json`.
+
+Paste:
+
+```json
+{
+  "name": "program-6",
+  "version": "1.0.0",
+  "description": "Docker Build Pipeline",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
+```
+
+### C. server.js
+
+Create a file named `server.js`.
+
+Paste:
+
+```javascript
+const express = require('express');
+
+const app = express();
+
+const PORT = 3000;
+
+app.get('/', (req, res) => {
+    res.send('Docker Build Pipeline Successful!');
+});
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
+```
+
+### D. .gitignore
+
+Create a file named `.gitignore`.
+
+Paste:
+
+```text
+node_modules/
+.env
+*.log
+```
+
+Save all files.
+
+---
+
+## STEP 4: INSTALL DEPENDENCIES
+
+Execute:
+
+```bash
+npm install
+```
+
+This installs Express and creates package-lock.json.
+
+---
+
+## STEP 5: BUILD DOCKER IMAGE
+
+Execute:
+
+```bash
+docker build -t program-6 .
+```
+
+Explanation:
+
+- docker build: Builds an image.
+- -t: Assigns a name.
+- program-6: Image name.
+- .: Current directory.
+
+Verify:
+
+```bash
+docker images
+```
+
+---
+
+## STEP 6: RUN AND TEST DOCKER CONTAINER
+
+Execute:
+
+```bash
+docker run -d -p 3000:3000 --name program6-container program-6
+```
+
+Check container:
+
+```bash
+docker ps
+```
+
+Open browser:
+
+```text
+http://localhost:3000
+```
+
+Expected output:
+
+```text
+Docker Build Pipeline Successful!
+```
+
+Stop and remove container:
+
+```bash
+docker stop program6-container
+```
+
+```bash
+docker rm program6-container
+```
+
+---
+
+# PART A: DOCKER HUB
+
+## STEP 7: CREATE DOCKER HUB ACCOUNT
+
+1. Open https://hub.docker.com/
+2. Click Sign Up.
+3. Enter email address.
+4. Create username and password.
+5. Complete registration.
+6. Verify email if requested.
+7. Log in.
+
+## STEP 8: CREATE DOCKER HUB REPOSITORY
+
+1. Open Docker Hub.
+2. Navigate to Repositories.
+3. Click Create Repository.
+4. Enter repository name: `program-6`.
+5. Select Public or Private.
+6. Click Create.
+
+## STEP 9: CREATE DOCKER HUB ACCESS TOKEN
+
+1. Open Account Settings.
+2. Select Personal Access Tokens.
+3. Click Generate New Token.
+4. Enter token name.
+5. Select Read and Write permissions.
+6. Generate the token.
+7. Copy and save it securely.
+
+## STEP 10: LOGIN TO DOCKER HUB
+
+Open Ubuntu Terminal inside P06.
+
+Execute:
+
+```bash
+docker login -u YOUR_DOCKERHUB_USERNAME
+```
+
+Enter your Docker Hub access token when prompted for a password.
+
+Expected output:
+
+```text
+Login Succeeded
+```
+
+## STEP 11: TAG DOCKER IMAGE
+
+Execute:
+
+```bash
+docker tag program-6 YOUR_DOCKERHUB_USERNAME/program-6:latest
+```
+
+Replace `YOUR_DOCKERHUB_USERNAME` with your Docker Hub username.
+
+## STEP 12: PUSH IMAGE TO DOCKER HUB
+
+Execute:
+
+```bash
+docker push YOUR_DOCKERHUB_USERNAME/program-6:latest
+```
+
+Wait until all layers are uploaded.
+
+Expected output:
+
+```text
+latest: digest: sha256:...
+```
+
+## STEP 13: VERIFY DOCKER HUB
+
+1. Open Docker Hub.
+2. Navigate to Repositories.
+3. Open program-6.
+4. Check the Tags section.
+5. Verify the latest tag.
+
+**Docker Hub upload completed.**
+
+---
+
+# PART B: GITHUB SOURCE CODE UPLOAD
+
+## STEP 14: CREATE GITHUB ACCOUNT
+
+1. Open https://github.com/
+2. Click Sign Up.
+3. Enter email address.
+4. Create username and password.
+5. Complete registration.
+6. Log in.
+
+## STEP 15: CREATE GITHUB REPOSITORY
+
+1. Click the + icon.
+2. Select New Repository.
+3. Enter repository name: `program-6`.
+4. Select Public or Private.
+5. Leave Add README unchecked.
+6. Click Create Repository.
+7. Copy the HTTPS repository URL.
+
+Repository URL format:
+
+```text
+https://github.com/YOUR_GITHUB_USERNAME/program-6.git
+```
+
+## STEP 16: CONFIGURE GIT IDENTITY
+
+Open Ubuntu Terminal inside P06.
+
+Set username:
+
+```bash
+git config --global user.name "YOUR_NAME"
+```
+
+Set email:
+
+```bash
+git config --global user.email "YOUR_EMAIL"
+```
+
+Verify:
+
+```bash
+git config --global --list
+```
+
+## STEP 17: INITIALIZE GIT
+
+Execute:
+
+```bash
+git init
+```
+
+## STEP 18: CONNECT PROJECT TO GITHUB
+
+Execute:
+
+```bash
+git remote add origin https://github.com/YOUR_GITHUB_USERNAME/program-6.git
+```
+
+Verify:
+
+```bash
+git remote -v
+```
+
+If origin already exists:
+
+```bash
+git remote set-url origin https://github.com/YOUR_GITHUB_USERNAME/program-6.git
+```
+
+## STEP 19: PUSH SOURCE CODE TO GITHUB
+
+Add project files:
+
+```bash
+git add .
+```
+
+Commit:
+
+```bash
+git commit -m "Initial commit"
+```
+
+Rename branch:
+
+```bash
+git branch -M main
+```
+
+Push:
+
+```bash
+git push -u origin main
+```
+
+Complete GitHub authentication if requested.
+
+Expected output:
+
+```text
+main -> main
+branch 'main' set up to track 'origin/main'
+```
+
+Verify the source files in your GitHub repository.
+
+**GitHub source code upload completed.**
+
+---
+
+# PART C: GITHUB CONTAINER REGISTRY (GHCR)
+
+## STEP 20: CREATE GITHUB PERSONAL ACCESS TOKEN
+
+1. Open https://github.com/settings/tokens
+2. Select Personal Access Tokens.
+3. Select Tokens (classic).
+4. Click Generate new token.
+5. Select Generate new token (classic).
+6. Enter token name: `GHCR-Program6`.
+7. Select expiration.
+8. Enable the following permissions:
+
+```text
+read:packages
+write:packages
+```
+
+9. Click Generate token.
+10. Copy and securely save the token.
+
+IMPORTANT: Never share your token or upload it to GitHub.
+
+## STEP 21: TAG DOCKER IMAGE FOR GHCR
+
+Open Ubuntu Terminal inside P06.
+
+Execute:
+
+```bash
+docker tag program-6 ghcr.io/YOUR_GITHUB_USERNAME/program-6:latest
+```
+
+Replace `YOUR_GITHUB_USERNAME` with your GitHub username.
+
+## STEP 22: LOGIN TO GHCR
+
+Execute:
+
+```bash
+echo "YOUR_GITHUB_PAT" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+```
+
+Replace:
+
+- YOUR_GITHUB_PAT with your actual GitHub Personal Access Token.
+- YOUR_GITHUB_USERNAME with your GitHub username.
+
+Expected output:
+
+```text
+Login Succeeded
+```
+
+## STEP 23: PUSH DOCKER IMAGE TO GHCR
+
+Execute:
+
+```bash
+docker push ghcr.io/YOUR_GITHUB_USERNAME/program-6:latest
+```
+
+Wait until all image layers are uploaded.
+
+Expected output:
+
+```text
+latest: digest: sha256:...
+```
+
+## STEP 24: VERIFY GITHUB PACKAGES
+
+1. Open GitHub.
+2. Click your profile picture.
+3. Select Your profile.
+4. Open Packages.
+5. Find the program-6 container package.
+6. Open it.
+7. Verify the latest image tag.
+
+**GitHub Container Registry upload completed.**
+
+---
+
+# FINAL VERIFICATION
+
+### Docker Hub
+
+Open:
+
+https://hub.docker.com/
+
+Verify that the program-6 image is available.
+
+### GitHub Repository
+
+Open your GitHub repository.
+
+Verify that the project source files are available.
+
+### GitHub Packages
+
+Open your GitHub profile → Packages.
+
+Verify that the program-6 Docker image is available.
+
+### Verify Local Images
+
+Execute:
+
+```bash
+docker images
+```
+
+Expected images:
+
+```text
+program-6
+YOUR_DOCKERHUB_USERNAME/program-6
+ghcr.io/YOUR_GITHUB_USERNAME/program-6
+```
+
+---
+
+# COMMON ERRORS AND SOLUTIONS
+
+### 1. Docker Login Failed
+
+Check Docker Hub username and access token.
+
+```bash
+docker login
+```
+
+### 2. Git Author Identity Unknown
+
+```bash
+git config --global user.name "YOUR_NAME"
+```
+
+```bash
+git config --global user.email "YOUR_EMAIL"
+```
+
+### 3. GitHub Repository Not Found
+
+Verify:
+
+```bash
+git remote -v
+```
+
+Correct the URL:
+
+```bash
+git remote set-url origin https://github.com/YOUR_GITHUB_USERNAME/program-6.git
+```
+
+### 4. GHCR Authentication Denied
+
+Check:
+- PAT is valid.
+- read:packages permission is enabled.
+- write:packages permission is enabled.
+- GitHub username is correct.
+
+Login again:
+
+```bash
+echo "YOUR_GITHUB_PAT" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+```
+
+### 5. Docker Image Not Found
+
+```bash
+docker images
+```
+
+Rebuild:
+
+```bash
+docker build -t program-6 .
+```
+
+---
+
+# RESULT
+
+Successfully created a Docker image, tagged and pushed it to Docker Hub and GitHub Container Registry, and uploaded the project source code to GitHub.
+
+**END OF PROGRAM 6**
+
+---
+
+# IMPORTANT VIVA POINTS
+
+1. Docker Hub – Platform for storing and sharing Docker images.
+2. GitHub – Platform for hosting and managing source code.
+3. Git – Version control system.
+4. GHCR – GitHub Container Registry.
+5. Dockerfile – File containing instructions to build a Docker image.
+6. Docker image – Template used to create containers.
+7. Docker container – Running instance of a Docker image.
+8. Docker tag – Assigns a name and version to an image.
+9. Docker push – Uploads an image to a registry.
+10. Git push – Uploads committed source code to GitHub.
+11. PAT – Personal Access Token used for authentication.
+12. CI – Continuous Integration.
