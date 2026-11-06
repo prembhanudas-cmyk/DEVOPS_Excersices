@@ -604,6 +604,8 @@ Login again:
 
 ```bash
 echo "YOUR_GITHUB_PAT" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+or
+sudo docker login ghcr.io -u YOUR_USERNAME  (enter PAT)
 ```
 
 ### 5. Docker Image Not Found
